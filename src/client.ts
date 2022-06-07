@@ -1,21 +1,36 @@
-import { KeygenMessage, MeMessage, Message, PresenceMessage, PublishMessage, StartMessage, SubscribeMessage, UnsubscribeMessage } from "./types";
+import {
+  EmitterMessagePayload,
+  ErrorPayload,
+  KeygenPayload,
+  KeygenRequest,
+  MePayload,
+  MeRequest,
+  Message,
+  PresencePayload,
+  PresenceRequest,
+  PublishRequest,
+  StartRequest,
+  SubscribeRequest,
+  UnsubscribeRequest,
+} from './types';
+
+export interface ListenerArgsMap {
+  connect: unknown;
+  disconnect: unknown;
+  message: EmitterMessagePayload;
+  offline: unknown;
+  error: ErrorPayload;
+  keygen: KeygenPayload;
+  presence: PresencePayload;
+  me: MePayload;
+}
 
 export * from './types';
-
-type ConnectListener = () => void;
-type DisconnectListener = () => void;
-type OfflineListener = () => void;
-type ErrorListener = (error: unknown) => void;
-type MessageListener = (payload: { channel: string; message: string; }) => void;
 
 class EmitterWorker {
   protected worker: Worker;
 
-  protected connectListeners: ConnectListener[] = [];
-  protected disconnectListeners: DisconnectListener[] = [];
-  protected offlineListeners: OfflineListener[] = [];
-  protected errorListeners: ErrorListener[] = [];
-  protected messageListeners: MessageListener[] = [];
+  protected listeners: { [key: string]: Function[] } = {};
 
   constructor(scriptUrl: string) {
     this.worker = new Worker(scriptUrl);
@@ -31,58 +46,28 @@ class EmitterWorker {
         port,
         secure,
         username,
-      }
-    } as StartMessage)
+      },
+    } as StartRequest);
   }
 
-  public on(type: 'connect', listener: ConnectListener): void;
-  public on(type: 'disconnect', listener: DisconnectListener): void;
-  public on(type: 'offline', listener: OfflineListener): void;
-  public on(type: 'error', listener: ErrorListener): void;
-  public on(type: 'message', listener: MessageListener): void;
-  public on(type: any, listener: Function): void {
-    switch (type) {
-      case 'connect':
-        this.connectListeners.push(listener as ConnectListener);
-        break;
-      case 'disconnect':
-        this.disconnectListeners.push(listener as DisconnectListener);
-        break;
-      case 'offline':
-        this.offlineListeners.push(listener as OfflineListener);
-        break;
-      case 'error':
-        this.errorListeners.push(listener as ErrorListener);
-        break;
-      case 'message':
-        this.messageListeners.push(listener as MessageListener);
-        break;
+  public on<K extends keyof ListenerArgsMap>(type: K, listener: (args: ListenerArgsMap[K]) => void) {
+    const key = type as string;
+
+    if (!this.listeners[key]) {
+      this.listeners[key] = [];
+    }
+
+    if (!this.listeners[key].includes(listener)) {
+      this.listeners[key].push(listener);
     }
   }
 
-  public off(type: 'connect', listener: ConnectListener): void;
-  public off(type: 'disconnect', listener: DisconnectListener): void;
-  public off(type: 'offline', listener: OfflineListener): void;
-  public off(type: 'error', listener: ErrorListener): void;
-  public off(type: 'message', listener: MessageListener): void;
-  public off(type: string, listener: Function): void {
-    switch (type) {
-      case 'connect':
-        this.connectListeners = this.connectListeners.filter(l => l !== listener);
-        break;
-      case 'disconnect':
-        this.disconnectListeners = this.disconnectListeners.filter(l => l !== listener);
-        break;
-      case 'offline':
-        this.offlineListeners = this.offlineListeners.filter(l => l !== listener);
-        break;
-      case 'error':
-        this.errorListeners = this.errorListeners.filter(l => l !== listener);
-        break;
-      case 'message':
-        this.messageListeners = this.messageListeners.filter(l => l !== listener);
-        break;
-    }
+  public off<K extends keyof ListenerArgsMap>(type: K, listener: (args: ListenerArgsMap[K]) => void) {
+    const key = type as string;
+
+    if (!this.listeners[key]) return;
+
+    this.listeners[key] = this.listeners[key].filter((l) => l !== listener);
   }
 
   public subscribe(key: string, channel: string) {
@@ -92,7 +77,7 @@ class EmitterWorker {
         key,
         channel,
       },
-    } as SubscribeMessage);
+    } as SubscribeRequest);
   }
 
   public unsubscribe(key: string, channel: string) {
@@ -102,7 +87,7 @@ class EmitterWorker {
         key,
         channel,
       },
-    } as UnsubscribeMessage);
+    } as UnsubscribeRequest);
   }
 
   public keygen(key: string, channel: string, permissions: string, ttl: number) {
@@ -114,7 +99,7 @@ class EmitterWorker {
         permissions,
         ttl,
       },
-    } as KeygenMessage);
+    } as KeygenRequest);
   }
 
   public publish(key: string, channel: string, message: string, me?: boolean, ttl?: number) {
@@ -127,13 +112,13 @@ class EmitterWorker {
         me,
         ttl,
       },
-    } as PublishMessage);
+    } as PublishRequest);
   }
 
   public me() {
     this.worker.postMessage({
       type: 'me',
-    } as MeMessage);
+    } as MeRequest);
   }
 
   public presence(key: string, channel: string, status?: boolean, changes?: boolean) {
@@ -144,46 +129,31 @@ class EmitterWorker {
         channel,
         status,
         changes,
-      }
-    } as PresenceMessage);
+      },
+    } as PresenceRequest);
   }
 
-  protected listen()  {
-    this.worker.addEventListener('message', message => {
+  protected listen() {
+    this.worker.addEventListener('message', (message) => {
       const data = message.data as Message;
 
+      let args;
       switch (data.type) {
-        case 'connect':
-          for (const listener of this.connectListeners) {
-            listener();
-          }
-          break;
-
-        case 'disconnect':
-          for (const listener of this.disconnectListeners) {
-            listener();
-          }
-          break;
-
-        case 'offline':
-          for (const listener of this.offlineListeners) {
-            listener();
-          }
-          break;
-
-        case 'error':
-          for (const listener of this.errorListeners) {
-            listener(data.payload);
-          }
-          break;
-
         case 'message':
-          for (const listener of this.messageListeners) {
-            listener(data.payload);
-          }
-          break;
+        case 'keygen':
+        case 'me':
+        case 'presence':
+        case 'error':
+          args = data.payload;
       }
-    })
+
+      const listeners = this.listeners[data.type];
+      if (listeners) {
+        for (const listener of listeners) {
+          listener(args);
+        }
+      }
+    });
   }
 }
 

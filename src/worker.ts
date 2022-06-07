@@ -3,15 +3,19 @@ import {
   ConnectMessage,
   DisconnectMessage,
   Message,
-  StartMessage,
-  SubscribeMessage,
-  UnsubscribeMessage,
+  StartRequest,
+  SubscribeRequest,
+  UnsubscribeRequest,
   OfflineMessage,
   ErrorMessage,
   EmitterMessage,
-  KeygenMessage,
-  PublishMessage,
+  KeygenRequest,
+  PublishRequest,
+  PresenceRequest,
+  EmitterRequest,
   PresenceMessage,
+  MeMessage,
+  KeygenMessage,
 } from './types';
 
 export * from './types';
@@ -22,7 +26,7 @@ const sendBack = (message: Message) => {
   self.postMessage(message);
 };
 
-const onStart = (message: StartMessage) => {
+const onStart = (message: StartRequest) => {
   const { host, port, secure, username } = message.payload;
 
   if (!client) {
@@ -60,6 +64,33 @@ const onStart = (message: StartMessage) => {
       } as ErrorMessage);
     });
 
+    client.on('keygen', (data) => {
+      sendBack({
+        type: 'keygen',
+        payload: {
+          ...data,
+        },
+      } as KeygenMessage);
+    });
+
+    client.on('presence', (data) => {
+      sendBack({
+        type: 'presence',
+        payload: {
+          ...data,
+        },
+      } as PresenceMessage);
+    });
+
+    client.on('me', (data) => {
+      sendBack({
+        type: 'me',
+        payload: {
+          ...data,
+        },
+      } as MeMessage);
+    });
+
     client.on('message', (message: emitter.EmitterMessage) => {
       sendBack({
         type: 'message',
@@ -72,7 +103,7 @@ const onStart = (message: StartMessage) => {
   }
 };
 
-const onSubscribe = (message: SubscribeMessage) => {
+const onSubscribe = (message: SubscribeRequest) => {
   if (!client) {
     console.error('Cannot subscribe to channel: not connected!');
     return;
@@ -86,7 +117,7 @@ const onSubscribe = (message: SubscribeMessage) => {
   });
 };
 
-const onUnsubscribe = (message: UnsubscribeMessage) => {
+const onUnsubscribe = (message: UnsubscribeRequest) => {
   if (!client) {
     console.error('Cannot unsubscribe from channel: not connected!');
     return;
@@ -100,7 +131,7 @@ const onUnsubscribe = (message: UnsubscribeMessage) => {
   });
 };
 
-const onKeygen = (message: KeygenMessage) => {
+const onKeygen = (message: KeygenRequest) => {
   if (!client) {
     console.error('Cannot generate key: not connected!');
     return;
@@ -116,7 +147,7 @@ const onKeygen = (message: KeygenMessage) => {
   });
 };
 
-const onPublish = (message: PublishMessage) => {
+const onPublish = (message: PublishRequest) => {
   if (!client) {
     console.error('Cannot publish: not connected!');
     return;
@@ -142,7 +173,7 @@ const onMe = () => {
   client.me();
 };
 
-const onPresence = (message: PresenceMessage) => {
+const onPresence = (message: PresenceRequest) => {
   if (!client) {
     console.error('Cannot request presence information: not connected!');
     return;
@@ -159,7 +190,7 @@ const onPresence = (message: PresenceMessage) => {
 };
 
 self.addEventListener('message', (msg: MessageEvent) => {
-  const data = msg.data as Message;
+  const data = msg.data as EmitterRequest;
 
   switch (data.type) {
     case 'start':
@@ -188,10 +219,6 @@ self.addEventListener('message', (msg: MessageEvent) => {
 
     case 'presence':
       onPresence(data);
-      break;
-
-    default:
-      console.warn('EmitterWorker: Unknown message type', data.type);
       break;
   }
 });

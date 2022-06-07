@@ -1,5 +1,56 @@
-// Main thread messages.
-export interface StartMessage {
+// Payloads.
+export interface EmitterMessagePayload {
+  channel: string;
+  message: string;
+}
+
+export interface ErrorPayload {
+  error: unknown;
+}
+
+export interface MePayload {
+  id: string;
+}
+
+export interface KeygenSucessPayload {
+  status: number;
+  key: string;
+  channel: string;
+}
+
+export interface KeygenErrorPayload {
+  status: number;
+  message: string;
+}
+
+export type KeygenPayload = KeygenSucessPayload | KeygenErrorPayload;
+
+export interface PresenceStatusPayload {
+  channel: string;
+  event: 'status';
+  time: number;
+  who: [
+    {
+      id: string;
+      username: string;
+    }
+  ];
+}
+
+export interface PresenceUpdatePayload {
+  channel: string;
+  event: 'subscribe' | 'unsubscribe';
+  time: number;
+  who: {
+    id: string;
+    username: string;
+  };
+}
+
+export type PresencePayload = PresenceStatusPayload | PresenceUpdatePayload;
+
+// Requests.
+export interface StartRequest {
   type: 'start';
   payload: {
     host: string;
@@ -9,7 +60,7 @@ export interface StartMessage {
   };
 }
 
-export interface SubscribeMessage {
+export interface SubscribeRequest {
   type: 'subscribe';
   payload: {
     key: string;
@@ -17,7 +68,7 @@ export interface SubscribeMessage {
   };
 }
 
-export interface UnsubscribeMessage {
+export interface UnsubscribeRequest {
   type: 'unsubscribe';
   payload: {
     key: string;
@@ -25,7 +76,7 @@ export interface UnsubscribeMessage {
   };
 }
 
-export interface KeygenMessage {
+export interface KeygenRequest {
   type: 'keygen';
   payload: {
     key: string;
@@ -35,7 +86,7 @@ export interface KeygenMessage {
   };
 }
 
-export interface PublishMessage {
+export interface PublishRequest {
   type: 'publish';
   payload: {
     key: string;
@@ -46,11 +97,11 @@ export interface PublishMessage {
   };
 }
 
-export interface MeMessage {
+export interface MeRequest {
   type: 'me';
 }
 
-export interface PresenceMessage {
+export interface PresenceRequest {
   type: 'presence';
   payload: {
     key: string;
@@ -59,6 +110,15 @@ export interface PresenceMessage {
     changes?: boolean;
   };
 }
+
+export type EmitterRequest =
+  | StartRequest
+  | SubscribeRequest
+  | UnsubscribeRequest
+  | KeygenRequest
+  | PublishRequest
+  | MeRequest
+  | PresenceRequest;
 
 // Client messages.
 export interface ConnectMessage {
@@ -73,31 +133,51 @@ export interface OfflineMessage {
   type: 'offline';
 }
 
+export interface PresenceStatusMessage {
+  type: 'presence';
+  payload: PresenceStatusPayload;
+}
+
+export interface PresenceUpdateMessage {
+  type: 'presence';
+  payload: PresenceUpdatePayload;
+}
+
+export type PresenceMessage = PresenceStatusMessage | PresenceUpdateMessage;
+
+export interface KeygenErrorMessage {
+  type: 'keygen';
+  payload: KeygenErrorPayload;
+}
+
+export interface KeygenSuccessMessage {
+  type: 'keygen';
+  payload: KeygenSucessPayload;
+}
+
+export type KeygenMessage = KeygenSuccessMessage | KeygenErrorMessage;
+
+export interface MeMessage {
+  type: 'me';
+  payload: MePayload;
+}
+
 export interface ErrorMessage {
   type: 'error';
-  payload: {
-    error: unknown;
-  };
+  payload: ErrorPayload;
 }
 
 export interface EmitterMessage {
   type: 'message';
-  payload: {
-    channel: string;
-    message: string;
-  };
+  payload: EmitterMessagePayload;
 }
 
 export type Message =
-  | StartMessage
-  | SubscribeMessage
-  | UnsubscribeMessage
-  | KeygenMessage
-  | PublishMessage
-  | MeMessage
-  | PresenceMessage
   | ConnectMessage
   | DisconnectMessage
   | OfflineMessage
+  | PresenceMessage
+  | MeMessage
+  | KeygenMessage
   | ErrorMessage
   | EmitterMessage;
