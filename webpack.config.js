@@ -17,7 +17,7 @@ const isDev = process.env.NODE_ENV === 'dev';
 module.exports = [
   {
     entry: {
-      'worker': path.resolve('./src/index.ts'),
+      'worker': path.resolve('./src/worker.ts'),
     },
     mode: isDev ? 'development' : 'production',
     devtool: isDev ? 'eval-source-map' : false,

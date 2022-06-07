@@ -23,14 +23,14 @@ const sendBack = (message: Message) => {
 };
 
 const onStart = (message: StartMessage) => {
-  const { host, port, secure, uid } = message.payload;
+  const { host, port, secure, username } = message.payload;
 
   if (!client) {
     client = emitter.connect({
       host,
       port,
       secure,
-      username: uid,
+      username,
     });
 
     client.on('connect', () => {

@@ -5,7 +5,7 @@ export interface StartMessage {
     host: string;
     port: number;
     secure: boolean;
-    uid: string;
+    username: string;
   };
 }
 
