@@ -5,6 +5,8 @@
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": ["ES2016", "DOM", "WebWorker"]
+    "lib": ["ES2016", "DOM", "WebWorker"],
+    "declaration": true,
+    "declarationDir": "dist"
   }
 }

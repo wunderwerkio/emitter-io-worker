@@ -14,6 +14,8 @@ import {
   PresenceMessage,
 } from './types';
 
+export * from './types';
+
 let client: emitter.Emitter | null = null;
 
 const sendBack = (message: Message) => {
