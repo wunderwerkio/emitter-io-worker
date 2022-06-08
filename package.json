@@ -24,6 +24,7 @@
   "scripts": {
     "build": "tsc && webpack build",
     "lint": "prettier --check --loglevel warn src/",
-    "fix-cs": "prettier --write --loglevel warn src/"
+    "fix-cs": "prettier --write --loglevel warn src/",
+    "test": "tsc --noEmit"
   }
 }
