@@ -111,6 +111,10 @@ export interface PresenceRequest {
   };
 }
 
+export interface PingRequest {
+  type: 'ping';
+}
+
 export type EmitterRequest =
   | StartRequest
   | SubscribeRequest
@@ -118,7 +122,8 @@ export type EmitterRequest =
   | KeygenRequest
   | PublishRequest
   | MeRequest
-  | PresenceRequest;
+  | PresenceRequest
+  | PingRequest;
 
 // Client messages.
 export interface ConnectMessage {
@@ -172,6 +177,10 @@ export interface EmitterMessage {
   payload: EmitterMessagePayload;
 }
 
+export interface PongMessage {
+  type: 'pong';
+}
+
 export type Message =
   | ConnectMessage
   | DisconnectMessage
@@ -180,4 +189,5 @@ export type Message =
   | MeMessage
   | KeygenMessage
   | ErrorMessage
-  | EmitterMessage;
+  | EmitterMessage
+  | PongMessage;

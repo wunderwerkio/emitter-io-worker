@@ -16,6 +16,7 @@ import {
   PresenceMessage,
   MeMessage,
   KeygenMessage,
+  PongMessage,
 } from './types';
 
 export * from './types';
@@ -219,6 +220,12 @@ self.addEventListener('message', (msg: MessageEvent) => {
 
     case 'presence':
       onPresence(data);
+      break;
+
+    case 'ping':
+      sendBack({
+        type: 'pong',
+      } as PongMessage);
       break;
   }
 });

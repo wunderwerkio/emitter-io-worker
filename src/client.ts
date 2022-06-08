@@ -6,6 +6,7 @@ import {
   MePayload,
   MeRequest,
   Message,
+  PingRequest,
   PresencePayload,
   PresenceRequest,
   PublishRequest,
@@ -32,6 +33,8 @@ class EmitterWorker {
 
   protected listeners: { [key: string]: Function[] } = {};
 
+  protected unansweredPings = 0;
+
   constructor(scriptUrl: string) {
     this.worker = new Worker(scriptUrl);
 
@@ -39,6 +42,7 @@ class EmitterWorker {
   }
 
   public connect(host: string, port: number, secure: boolean, username?: string) {
+    (window as any)._worker = this.worker;
     this.worker.postMessage({
       type: 'start',
       payload: {
@@ -48,6 +52,27 @@ class EmitterWorker {
         username,
       },
     } as StartRequest);
+
+    // Call disconnect listeners if worker is terminated or does not respond.
+    const interval = setInterval(() => {
+      this.worker.postMessage({
+        type: 'ping',
+      } as PingRequest);
+
+      this.unansweredPings++;
+
+      if (this.unansweredPings > 5) {
+        clearInterval(interval);
+        this.worker.terminate();
+
+        const listeners = this.listeners['disconnect'];
+        if (listeners) {
+          for (const listener of listeners) {
+            listener();
+          }
+        }
+      }
+    }, 1000);
   }
 
   public on<K extends keyof ListenerArgsMap>(type: K, listener: (args: ListenerArgsMap[K]) => void) {
@@ -136,6 +161,11 @@ class EmitterWorker {
   protected listen() {
     this.worker.addEventListener('message', (message) => {
       const data = message.data as Message;
+
+      if (data.type === 'pong') {
+        this.unansweredPings = 0;
+        return;
+      }
 
       let args;
       switch (data.type) {
