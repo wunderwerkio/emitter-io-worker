@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "target": "es6",
+    "target": "es5",
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": ["ES2016", "DOM", "WebWorker"],
     "declaration": true,
-    "declarationDir": "dist"
-  }
+    "declarationDir": "dist",
+    "outDir": "dist"
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./src/worker.ts"
+  ]
 }

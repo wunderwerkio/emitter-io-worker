@@ -1,11 +1,12 @@
 {
   "name": "@wunderwerk/emitter-io-worker",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Provides emitter-io for the browser as a web worker.",
-  "main": "src/client.ts",
+  "main": "dist/client.js",
   "author": "wunderwerk Software GmbH <dev@wunderwerk.io>",
   "license": "MIT",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^8.3.2",
     "buffer": "^6.0.3",
     "prettier": "^2.6.2",
     "process": "^0.11.10",
@@ -21,6 +22,7 @@
     "emitter-io": "^1.39.0"
   },
   "scripts": {
+    "build": "tsc && webpack build",
     "lint": "prettier --check --loglevel warn src/",
     "fix-cs": "prettier --write --loglevel warn src/"
   }
