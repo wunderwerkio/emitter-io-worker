@@ -227,5 +227,10 @@ self.addEventListener('message', (msg: MessageEvent) => {
         type: 'pong',
       } as PongMessage);
       break;
+
+    case 'disconnect':
+      client?.disconnect();
+      client = null;
+      break;
   }
 });

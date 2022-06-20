@@ -18,6 +18,7 @@ import {
 export interface ListenerArgsMap {
   connect: unknown;
   disconnect: unknown;
+  workerConnectionLost: unknown;
   message: EmitterMessagePayload;
   offline: unknown;
   error: ErrorPayload;
@@ -42,7 +43,6 @@ class EmitterWorker {
   }
 
   public connect(host: string, port: number, secure: boolean, username?: string) {
-    (window as any)._worker = this.worker;
     this.worker.postMessage({
       type: 'start',
       payload: {
@@ -53,6 +53,10 @@ class EmitterWorker {
       },
     } as StartRequest);
 
+    this.healthcheck();
+  }
+
+  protected healthcheck() {
     // Call disconnect listeners if worker is terminated or does not respond.
     const interval = setInterval(() => {
       this.worker.postMessage({
@@ -63,9 +67,9 @@ class EmitterWorker {
 
       if (this.unansweredPings > 5) {
         clearInterval(interval);
-        this.worker.terminate();
+        this.terminate();
 
-        const listeners = this.listeners['disconnect'];
+        const listeners = this.listeners['workerConnectionLost'];
         if (listeners) {
           for (const listener of listeners) {
             listener();
@@ -73,6 +77,11 @@ class EmitterWorker {
         }
       }
     }, 1000);
+  }
+
+  public terminate() {
+    this.worker.postMessage({ type: 'disconnect' });
+    this.worker.terminate();
   }
 
   public on<K extends keyof ListenerArgsMap>(type: K, listener: (args: ListenerArgsMap[K]) => void) {

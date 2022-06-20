@@ -115,6 +115,10 @@ export interface PingRequest {
   type: 'ping';
 }
 
+export interface DisconnectRequest {
+  type: 'disconnect';
+}
+
 export type EmitterRequest =
   | StartRequest
   | SubscribeRequest
@@ -123,7 +127,8 @@ export type EmitterRequest =
   | PublishRequest
   | MeRequest
   | PresenceRequest
-  | PingRequest;
+  | PingRequest
+  | DisconnectRequest;
 
 // Client messages.
 export interface ConnectMessage {
@@ -136,6 +141,10 @@ export interface DisconnectMessage {
 
 export interface OfflineMessage {
   type: 'offline';
+}
+
+export interface WorkerConnectionLostMessage {
+  type: 'workerConnectionLost';
 }
 
 export interface PresenceStatusMessage {
@@ -184,6 +193,7 @@ export interface PongMessage {
 export type Message =
   | ConnectMessage
   | DisconnectMessage
+  | WorkerConnectionLostMessage
   | OfflineMessage
   | PresenceMessage
   | MeMessage
