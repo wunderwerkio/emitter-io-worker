@@ -1,6 +1,6 @@
 {
   "name": "@wunderwerk/emitter-io-worker",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Provides emitter-io for the browser as a web worker.",
   "main": "dist/client.js",
   "author": "wunderwerk Software GmbH <dev@wunderwerk.io>",
